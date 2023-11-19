@@ -1,0 +1,20 @@
+{{define "chat_room"}}
+<!-- will be interpreted as hx-swap-oob="true" by default -->
+<form id="form" ws-send>
+  <input name="message">
+</form>
+
+<!-- will be appended to #notifications div -->
+<div id="notifications" hx-swap-oob="beforeend">
+  New message received
+  <br>
+</div>
+
+<div id="chat_room">
+  <ul>
+    {{range .}}
+    <li>{{.Message}}</li>
+    {{end}}
+  </ul>
+</div>
+{{end}}

@@ -1,0 +1,32 @@
+{{define "index"}}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>go-htmx</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <script src="https://unpkg.com/htmx.org@1.9.8"
+    integrity="sha384-rgjA7mptc2ETQqXoYC3/zJvkU7K/aP44Y+z7xQuJiVnB/422P/Ak+F/AqFR7E4Wr"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
+</head>
+
+<body>
+  <main>
+    <div hx-ext="ws" ws-connect="/chatroom">
+      <div id="notifications"></div>
+      <div id="chat_room">
+        ...
+      </div>
+      <form id="form" ws-send>
+        <input name="message">
+      </form>
+    </div>
+  </main>
+
+</body>
+
+</html>
+{{end}}
