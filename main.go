@@ -37,6 +37,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 func chatroom(ws *websocket.Conn) {
 	log.Println("executing chatroom")
 
+	// Get the message from the ws. Can't just 'read', must uses the JSON/Message.Receive function.
 	var message Message
 	err := websocket.JSON.Receive(ws, &message)
 	if err != nil {
@@ -56,6 +57,8 @@ func chatroom(ws *websocket.Conn) {
 	}
 	log.Println("parsed chatroom template")
 
+	// Need to write the whole template to the buffer first and then respond by sending the buf as a message to the
+	// ws below.
 	var buf bytes.Buffer
 	err = tmpl.ExecuteTemplate(&buf, "chat_room", messages)
 	if err != nil {
