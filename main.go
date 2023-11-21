@@ -11,6 +11,8 @@ import (
 
 var (
 	messages = []Message{}
+
+	conns map[*websocket.Conn]struct{}
 )
 
 type Message struct {
@@ -34,49 +36,53 @@ func index(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func chatroom(ws *websocket.Conn) {
-	log.Println("executing chatroom")
+func connectToChatroom(ws *websocket.Conn) {
+	log.Println("connecting to chatroom")
 
-	// Get the message from the ws. Can't just 'read', must uses the JSON/Message.Receive function.
-	var message Message
-	err := websocket.JSON.Receive(ws, &message)
-	if err != nil {
-		log.Printf("failed to receive message from websocket: %v", err)
-		return
-	}
+	conns[ws] = struct{}{}
 
-	messages = append(messages, message)
+	for {
+		// Get the message from the ws. Can't just 'read', must uses the JSON/Message.Receive function.
+		var message Message
+		err := websocket.JSON.Receive(ws, &message)
+		if err != nil {
+			log.Printf("failed to receive message from websocket: %v", err)
+			return
+		}
 
-	log.Printf("chatroom message: %s", message.Message)
-	log.Printf("chatroom message length: %d", len(messages))
+		messages = append(messages, message)
 
-	tmpl, err := template.ParseFiles("static/templates/chatroom.html")
-	if err != nil {
-		log.Printf("failed to parse chatroom template: %v", err)
-		return
-	}
-	log.Println("parsed chatroom template")
+		tmpl, err := template.ParseFiles("static/templates/chatroom.html")
+		if err != nil {
+			log.Printf("failed to parse chatroom template: %v", err)
+			return
+		}
+		log.Println("parsed chatroom template")
 
-	// Need to write the whole template to the buffer first and then respond by sending the buf as a message to the
-	// ws below.
-	var buf bytes.Buffer
-	err = tmpl.ExecuteTemplate(&buf, "chat_room", messages)
-	if err != nil {
-		log.Printf("failed to execute template: %v", err)
-		return
-	}
+		// Need to write the whole template to the buffer first and then respond by sending the buf as a message to the
+		// ws below.
+		var buf bytes.Buffer
+		err = tmpl.ExecuteTemplate(&buf, "chat_room", messages)
+		if err != nil {
+			log.Printf("failed to execute template: %v", err)
+			return
+		}
 
-	err = websocket.Message.Send(ws, buf.String())
-	if err != nil {
-		log.Printf("failed to send websocket response: %v", err)
-		return
+		for connection := range conns {
+			err = websocket.Message.Send(connection, buf.String())
+			if err != nil {
+				log.Printf("failed to send websocket response: %v", err)
+			}
+		}
 	}
 
 }
 
 func main() {
+	conns = make(map[*websocket.Conn]struct{})
+
 	http.HandleFunc("/", index)
-	http.Handle("/chatroom", websocket.Handler(chatroom))
+	http.Handle("/chatroom", websocket.Handler(connectToChatroom))
 
 	log.Fatal(http.ListenAndServe(":3000", nil))
 }
