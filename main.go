@@ -36,7 +36,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func connectToChatroom(ws *websocket.Conn) {
+func chat(ws *websocket.Conn) {
 	log.Println("connecting to chatroom")
 
 	conns[ws] = struct{}{}
@@ -82,7 +82,7 @@ func main() {
 	conns = make(map[*websocket.Conn]struct{})
 
 	http.HandleFunc("/", index)
-	http.Handle("/chatroom", websocket.Handler(connectToChatroom))
+	http.Handle("/chatroom", websocket.Handler(chat))
 
 	log.Fatal(http.ListenAndServe(":3000", nil))
 }
