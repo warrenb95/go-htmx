@@ -75,7 +75,6 @@ func chat(ws *websocket.Conn) {
 			}
 		}
 	}
-
 }
 
 func main() {
